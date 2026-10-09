@@ -1,0 +1,47 @@
+{
+  "name": "paliaproperty",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "backend:dev": "npm --prefix ../paliapropertybk run dev",
+    "backend:build": "npm --prefix ../paliapropertybk run build",
+    "backend:start": "npm --prefix ../paliapropertybk run start",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "prisma:generate": "npm --prefix ../paliapropertybk run prisma:generate",
+    "prisma:migrate": "npm --prefix ../paliapropertybk run prisma:migrate"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.7.1",
+    "@fastify/cors": "^11.0.0",
+    "@fastify/jwt": "^9.1.0",
+    "@prisma/client": "^6.19.0",
+    "dotenv": "^17.2.2",
+    "fastify": "^5.4.0",
+    "@types/leaflet": "^1.9.22",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.43.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.28.0",
+    "next": "16.2.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.84.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "prisma": "^6.19.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.20.5",
+    "typescript": "^5"
+  }
+}
