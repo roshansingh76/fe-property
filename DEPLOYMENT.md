@@ -34,7 +34,7 @@ If either GHCR package is private, log in to GHCR on the VPS as well so `docker 
 
 Set these Actions values in the frontend repository:
 
-- Variable `NEXT_PUBLIC_API_URL`: `https://api.example.com/api/v1` (replace with your API domain). This is compiled into the frontend image.
+- Variable `NEXT_PUBLIC_API_URL`: `https://be-property.onrender.com/api/v1` for the current backend. This is compiled into the frontend image; if omitted, the workflow uses this default.
 - Secrets `SSH_HOST`, `SSH_USER`, and `SSH_PRIVATE_KEY`; optionally set `SSH_PORT` (default `22`).
 - Secret `DEPLOY_PATH`: `/var/www/html/fe-property`.
 

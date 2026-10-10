@@ -151,10 +151,10 @@ The API base is configured through:
 NEXT_PUBLIC_API_URL
 ```
 
-Default fallback:
+Default production fallback:
 
 ```text
-http://localhost:4000/api/v1
+https://be-property.onrender.com/api/v1
 ```
 
 ## 6. Key Frontend Structure

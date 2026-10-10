@@ -4,9 +4,12 @@
 
 import type { AgriProperty, PropertyCategory } from "@/lib/data/properties";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "https://be-property.onrender.com/api/v1";
+const configuredApiUrl =
+  process.env.NEXT_PUBLIC_API_URL?.trim() || "https://be-property.onrender.com";
+const normalizedApiUrl = configuredApiUrl.replace(/\/+$/, "");
+const API_BASE = /\/api\/v1$/i.test(normalizedApiUrl)
+  ? normalizedApiUrl
+  : `${normalizedApiUrl}/api/v1`;
 const API_ORIGIN = API_BASE.replace(/\/api\/v1\/?$/, "");
 
 type ApiProperty = {
