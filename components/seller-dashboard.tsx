@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, BarChart3, BellRing, CalendarClock, Eye, Home,
+  ArrowRight, BarChart3, BellRing, CalendarClock, Camera, Eye, FileText, Home,
   MessageCircle, Plus, Search, Send, ShieldCheck, Sparkles, Pencil,
   Trash2, ChevronDown, ChevronUp, Phone, Target, TrendingUp,
 } from "lucide-react";
@@ -20,6 +20,8 @@ import {
   ConfirmDialog, DashboardSignOutButton, EmptyState, ErrorBanner, LeadStatusBadge,
   PageSpinner, SectionCard, StatCard, StatusBadge,
 } from "@/components/ui/dashboard-ui";
+import { PropertyImagesPanel } from "@/components/property-images-panel";
+import { PropertyDocumentsPanel } from "@/components/property-documents-panel";
 
 interface DashStats { listings: number; active: number; pending: number; sold: number; views: number; leads: number }
 const LEAD_STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "SITE_VISIT", "OFFER_MADE", "CLOSED"] as const;
@@ -39,6 +41,8 @@ export function SellerDashboard({ role }: { role: "SELLER" | "BROKER" }) {
   const [requestQuery, setRequestQuery] = useState("");
   const [requestStatus, setRequestStatus] = useState("ALL");
   const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
+  const [imagesOpenId, setImagesOpenId] = useState<string | null>(null);
+  const [docsOpenId, setDocsOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -389,6 +393,18 @@ export function SellerDashboard({ role }: { role: "SELLER" | "BROKER" }) {
                             className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-red-500 hover:border-red-200 transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
+                          <button
+                            onClick={() => setImagesOpenId(imagesOpenId === prop.id ? null : prop.id)}
+                            aria-label="Manage property images"
+                            className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-trust-blue hover:border-trust-blue/40 transition-colors">
+                            <Camera className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDocsOpenId(docsOpenId === prop.id ? null : prop.id)}
+                            aria-label="Manage legal documents"
+                            className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-harvest-gold-dark hover:border-harvest-gold/40 transition-colors">
+                            <FileText className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
 
@@ -412,6 +428,28 @@ export function SellerDashboard({ role }: { role: "SELLER" | "BROKER" }) {
                             </div>
                           ))}
                         </div>
+                      )}
+
+                      {/* Images panel */}
+                      {imagesOpenId === prop.id && (
+                        <PropertyImagesPanel
+                          propertyId={prop.id}
+                          initialImages={prop.images}
+                          onClose={() => setImagesOpenId(null)}
+                          onImagesUpdated={(imgs) =>
+                            setProperties(prev =>
+                              prev.map(p => p.id === prop.id ? { ...p, images: imgs } : p)
+                            )
+                          }
+                        />
+                      )}
+
+                      {/* Documents panel */}
+                      {docsOpenId === prop.id && (
+                        <PropertyDocumentsPanel
+                          propertyId={prop.id}
+                          onClose={() => setDocsOpenId(null)}
+                        />
                       )}
                     </div>
                   );

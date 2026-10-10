@@ -32,12 +32,14 @@ const nextConfig: NextConfig = {
   // Proxy /api/backend/* → backend so images can be loaded same-origin in
   // production and avoid CORS / mixed-content issues.
   async rewrites() {
-    return [
-      {
-        source: "/uploads/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ?? "https://be-property.onrender.com"}/uploads/:path*`,
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: "/uploads/:path*",
+          destination: `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ?? "https://be-property.onrender.com"}/uploads/:path*`,
+        },
+      ],
+    };
   },
 };
 

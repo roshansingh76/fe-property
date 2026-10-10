@@ -322,6 +322,20 @@ export async function deletePropertyImage(propertyId: string, imageUrl: string):
   return response.images.map(img => img.startsWith("/") ? `${API_ORIGIN}${img}` : img);
 }
 
+export interface PropertyDocument {
+  id: string;
+  type: string;
+  url: string;
+  filename: string;
+  mimeType: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function fetchPropertyDocuments(propertyId: string): Promise<PropertyDocument[]> {
+  return api.get<PropertyDocument[]>('/properties/' + propertyId + '/documents');
+}
+
 export async function uploadPropertyDocument(propertyId: string, file: File, documentType: "KHATAUNI" | "KHASRA" | "IDENTITY" | "REGISTRY" | "OTHER"): Promise<void> {
   const form = new FormData();
   form.append("documentType", documentType);
