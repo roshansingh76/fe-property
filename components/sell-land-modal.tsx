@@ -80,6 +80,9 @@ export function SellLandModal({ isOpen, onClose }: SellLandModalProps) {
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [khatauniFile, setKhatauniFile] = useState<File | null>(null);
+  const [khatauniError, setKhatauniError] = useState<string | null>(null);
+  const khatauniInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void fetchLocations()
@@ -138,6 +141,28 @@ export function SellLandModal({ isOpen, onClose }: SellLandModalProps) {
     addPhotos(e.dataTransfer.files);
   };
 
+  const handleKhatauniChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const isAllowedType = /\.(pdf|jpe?g|png)$/i.test(file.name);
+    if (!isAllowedType) {
+      setKhatauniFile(null);
+      setKhatauniError("Choose a PDF, JPG, or PNG document.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setKhatauniFile(null);
+      setKhatauniError("The document must be 5MB or smaller.");
+      event.target.value = "";
+      return;
+    }
+
+    setKhatauniFile(file);
+    setKhatauniError(null);
+  };
+
   // ── Submit ──────────────────────────────────────────────────────────────
 
   const onSubmit = async (data: SellLandFormData) => {
@@ -167,10 +192,7 @@ export function SellLandModal({ isOpen, onClose }: SellLandModalProps) {
         await uploadPropertyImages(property.id, photoFiles);
       }
 
-      // Upload khatauni doc if provided
-      if (data.khatauniFile instanceof FileList && data.khatauniFile.length > 0) {
-        await uploadPropertyDocument(property.id, data.khatauniFile[0], "KHATAUNI");
-      }
+      if (khatauniFile) await uploadPropertyDocument(property.id, khatauniFile, "KHATAUNI");
 
       setSubmitted(true);
     } catch (error) {
@@ -187,6 +209,9 @@ export function SellLandModal({ isOpen, onClose }: SellLandModalProps) {
       photoPreviews.forEach(url => URL.revokeObjectURL(url));
       setPhotoFiles([]);
       setPhotoPreviews([]);
+      setKhatauniFile(null);
+      setKhatauniError(null);
+      if (khatauniInputRef.current) khatauniInputRef.current.value = "";
     }, 300);
   };
 
@@ -490,12 +515,47 @@ export function SellLandModal({ isOpen, onClose }: SellLandModalProps) {
                             </div>
 
                             {/* Khatauni document upload */}
-                            <label className="group flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-agri-green hover:bg-agri-green-50 transition-all">
-                              <Upload className="w-7 h-7 text-slate-300 group-hover:text-agri-green group-hover:scale-110 transition-all" />
-                              <span className="text-sm font-semibold text-slate-600">Upload Khatauni / Khasra</span>
-                              <span className="text-xs text-slate-400">PDF, JPG, PNG — Max 5MB</span>
-                              <input type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png" {...register("khatauniFile")} />
-                            </label>
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => khatauniInputRef.current?.click()}
+                                className="group w-full flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-slate-200 rounded-2xl hover:border-agri-green hover:bg-agri-green-50 transition-all"
+                              >
+                                <Upload className="w-7 h-7 text-slate-300 group-hover:text-agri-green group-hover:scale-110 transition-all" />
+                                <span className="text-sm font-semibold text-slate-600">
+                                  {khatauniFile ? "Change Khatauni / Khasra" : "Upload Khatauni / Khasra"}
+                                </span>
+                                <span className="text-xs text-slate-400">PDF, JPG, PNG — Max 5MB</span>
+                              </button>
+                              <input
+                                ref={khatauniInputRef}
+                                type="file"
+                                className="sr-only"
+                                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                onChange={handleKhatauniChange}
+                              />
+                              {khatauniFile && (
+                                <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-agri-green-50 px-3 py-2 text-sm text-slate-700">
+                                  <span className="flex min-w-0 items-center gap-2">
+                                    <FileText className="h-4 w-4 flex-shrink-0 text-agri-green" />
+                                    <span className="truncate">{khatauniFile.name}</span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setKhatauniFile(null);
+                                      setKhatauniError(null);
+                                      if (khatauniInputRef.current) khatauniInputRef.current.value = "";
+                                    }}
+                                    className="rounded p-1 text-slate-500 hover:bg-white hover:text-red-600"
+                                    aria-label="Remove Khatauni or Khasra document"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              )}
+                              {khatauniError && <p className="mt-1 text-xs text-red-500">{khatauniError}</p>}
+                            </div>
 
                             {/* Consent */}
                             <Controller name="consentToContact" control={control} render={({ field }) => (

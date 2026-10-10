@@ -91,8 +91,6 @@ export const sellLandSchema = z.object({
 
   // Step 5 — Documents & Media
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  khatauniFile: z.any().optional(),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   photos: z.any().optional(),
 
   // Consent
