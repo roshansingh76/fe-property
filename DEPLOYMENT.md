@@ -1,28 +1,46 @@
-# Hostinger VPS deployment
+# Deploy on an Ubuntu Hostinger VPS
 
-These Docker files target a Hostinger VPS with Docker Engine and the Compose plugin. They do not apply to Hostinger shared hosting. Put a reverse proxy such as Nginx in front of the containers and configure TLS for the domains.
+This setup runs the frontend, API, and Redis in Docker Compose. Nginx on the VPS reverse-proxies web traffic to the containers; it does not serve either repository as a static document root.
 
-## GitHub setup
+## VPS directory layout
 
-The frontend and API are separate repositories. Keep this repository's workflow in the frontend repo and add `paliapropertybk/.github/workflows/deploy.yml` from the API folder to the API repository. The API folder currently has no Git repository in this workspace, so it must be pushed to its own GitHub repository before its workflow can run.
+Keep the repositories as siblings:
 
-Set this Actions variable in the frontend repository:
+```text
+/var/www/html/
+├── fe-property/   # frontend repository and Compose deployment directory
+└── be-property/   # backend repository/source
+```
 
-- `NEXT_PUBLIC_API_URL`: public API base URL, including `/api/v1`, for example `https://api.example.com/api/v1`. This value is compiled into the frontend image.
+The frontend GitHub Actions workflow copies `docker-compose.yml` to `DEPLOY_PATH`. In the frontend repository, set `DEPLOY_PATH` to `/var/www/html/fe-property`. Keep `/var/www/html/fe-property/backend.env` on the VPS and do not commit it. Compose reads this file for the API settings.
 
-Set these Actions secrets in both repositories:
+## GitHub image configuration
 
-- `SSH_HOST`: Hostinger VPS IP or hostname.
-- `SSH_USER`: SSH account with permission to run Docker Compose.
-- `SSH_PRIVATE_KEY`: private key accepted by the VPS.
-- `SSH_PORT`: SSH port, usually `22` (optional).
-- `DEPLOY_PATH`: VPS deployment directory, default `/opt/palia-property` (optional).
+The frontend workflow builds and publishes `ghcr.io/roshansingh76/fe-property`. The Compose defaults use these image names:
 
-Both workflows publish images named `ghcr.io/<owner>/<repository>`. Make the packages public in GitHub Packages, or configure registry pull credentials on the VPS before deployment. The Compose defaults expect `ghcr.io/mittalankur088/paliaproperty:latest` and `ghcr.io/mittalankur088/paliapropertybk:latest`; edit those defaults if the API repository/package uses a different name.
+- `ghcr.io/roshansingh76/fe-property:latest`
+- `ghcr.io/roshansingh76/be-property:latest`
 
-## VPS setup
+The backend image must be built and published from the `be-property` repository before the frontend deployment runs. This repository currently has no backend image-publishing workflow. For a public GHCR package, build and push it from a machine checked out to the backend repository:
 
-Install Docker Engine with the Docker Compose plugin and create the deployment directory. In that directory, create `backend.env` with the API runtime settings:
+```bash
+cd /var/www/html/be-property
+docker login ghcr.io -u roshansingh76
+docker build -t ghcr.io/roshansingh76/be-property:latest .
+docker push ghcr.io/roshansingh76/be-property:latest
+```
+
+If either GHCR package is private, log in to GHCR on the VPS as well so `docker compose pull` can access it.
+
+Set these Actions values in the frontend repository:
+
+- Variable `NEXT_PUBLIC_API_URL`: `https://api.example.com/api/v1` (replace with your API domain). This is compiled into the frontend image.
+- Secrets `SSH_HOST`, `SSH_USER`, and `SSH_PRIVATE_KEY`; optionally set `SSH_PORT` (default `22`).
+- Secret `DEPLOY_PATH`: `/var/www/html/fe-property`.
+
+## API environment
+
+Create `/var/www/html/fe-property/backend.env` on the VPS:
 
 ```dotenv
 NODE_ENV=production
@@ -34,6 +52,66 @@ WEB_ORIGIN=https://example.com
 EXTRA_WEB_ORIGINS=
 ```
 
-Use a managed PostgreSQL database or a separately maintained database service. Do not commit `backend.env`. The API stores uploaded property files in a named Docker volume, so they survive container replacements.
+Use a managed PostgreSQL database or a separately maintained database service, and replace all example values. Do not commit `backend.env`.
 
-Deploy the API repository first so its image exists in GHCR. Then deploy the frontend repository; its workflow copies `docker-compose.yml` to the VPS, runs pending Prisma migrations, and starts both services. The containers bind only to `127.0.0.1:3000` and `127.0.0.1:4000`; configure the VPS reverse proxy to send the frontend domain to port 3000 and the API domain to port 4000. The API allows browser origins listed by `WEB_ORIGIN` and `EXTRA_WEB_ORIGINS`.
+## Start or update the containers
+
+From an SSH session on the VPS:
+
+```bash
+cd /var/www/html/fe-property
+docker compose config --quiet
+docker compose pull
+docker compose run --rm api npx prisma migrate deploy
+docker compose up -d
+docker compose ps
+```
+
+The API connects to Redis at `redis://redis:6379` inside the Compose network. Redis is not exposed on a host port. The API and frontend are bound to `127.0.0.1:4000` and `127.0.0.1:3000`, respectively.
+
+## Nginx reverse proxy
+
+Point DNS A records for `example.com` and `api.example.com` to the VPS. Create `/etc/nginx/sites-available/palia-property` with the following, replacing the example domains:
+
+```nginx
+server {
+    listen 80;
+    server_name example.com www.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name api.example.com;
+    client_max_body_size 10m;
+
+    location / {
+        proxy_pass http://127.0.0.1:4000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Enable and validate the site, then reload Nginx:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/palia-property /etc/nginx/sites-enabled/palia-property
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Configure HTTPS certificates for both domains (for example, with Certbot) and allow inbound ports 80 and 443 in the VPS firewall. Do not expose ports 3000, 4000, or 6379 publicly.
+
+## Property images and persistence
+
+Uploaded property images and documents are stored in the named `property_uploads` volume mounted at `/app/uploads` in the API container. Redis data is stored in `redis_data`. These volumes survive container replacement; they are not backups. Back them up regularly, and do not use `docker compose down -v` unless you intend to delete the data.
