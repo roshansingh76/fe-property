@@ -45,7 +45,7 @@ const DEFAULT_ALERTS: SavedSearchAlert[] = [
 ];
 
 function PropertyCard({ prop, isSaved, onToggleSave }: { prop: AgriProperty; isSaved: boolean; onToggleSave: (id: string) => void }) {
-  const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1").replace(/\/api\/v1\/?$/, "");
+  const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? "https://be-property.onrender.com/api/v1").replace(/\/api\/v1\/?$/, "");
   const imgSrc = prop.images[0]?.startsWith("/") ? `${API_ORIGIN}${prop.images[0]}` : prop.images[0];
   return (
     <div className="group relative bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-card-hover hover:border-agri-green/20 transition-all duration-300 overflow-hidden flex flex-col">

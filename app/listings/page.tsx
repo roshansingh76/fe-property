@@ -324,7 +324,7 @@ function ListingsContent() {
               ) : apiError ? (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-12 text-center">
                   <h3 className="text-lg font-extrabold text-amber-950">Property API unavailable</h3>
-                  <p className="mt-2 text-sm text-amber-800">Start the Node API at <code>http://localhost:4000</code> to load live listings.</p>
+                  <p className="mt-2 text-sm text-amber-800">Check your connection to the property API and try again.</p>
                 </div>
               ) : properties.length === 0 ? (
                 <div className="text-center py-20">

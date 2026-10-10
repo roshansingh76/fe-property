@@ -62,7 +62,7 @@ const LEAD_STATUSES = ["NEW","CONTACTED","QUALIFIED","SITE_VISIT","OFFER_MADE","
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 const API_ORIGIN =
-  (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1")
+  (process.env.NEXT_PUBLIC_API_URL ?? "https://be-property.onrender.com/api/v1")
     .replace(/\/api\/v1\/?$/, "");
 
 function fullImageUrl(url: string) {

@@ -41,6 +41,7 @@ function LoginForm() {
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState("");
   const [countdown, setCountdown] = useState(0);
+  const [developmentOtp, setDevelopmentOtp] = useState<string | null>(null);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -60,7 +61,8 @@ function LoginForm() {
     }
     setLoading(true); setError("");
     try {
-      await requestOTP(phone);
+      const response = await requestOTP(phone);
+      setDevelopmentOtp(response.developmentCode ?? null);
       setStep("otp"); setCountdown(60);
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
     } catch (err) {
@@ -104,7 +106,9 @@ function LoginForm() {
   const handleResend = async () => {
     setLoading(true); setError("");
     try {
-      await requestOTP(phone); setCountdown(60); setOtp(["", "", "", "", "", ""]);
+      const response = await requestOTP(phone);
+      setDevelopmentOtp(response.developmentCode ?? null);
+      setCountdown(60); setOtp(["", "", "", "", "", ""]);
       otpRefs.current[0]?.focus();
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "Failed to resend OTP");
@@ -117,6 +121,15 @@ function LoginForm() {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-forest-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative w-full max-w-md">
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-white/80 transition-colors hover:text-white"
+        >
+          <Home className="h-4 w-4" />
+          Back to home
+        </button>
+
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-12 h-12 bg-gradient-to-br from-agri-green to-forest-600 rounded-2xl flex items-center justify-center shadow-green">
@@ -264,6 +277,12 @@ function LoginForm() {
                       </p>
                     </div>
                   </div>
+
+                  {developmentOtp && (
+                    <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      Development OTP: <strong>{developmentOtp}</strong>
+                    </div>
+                  )}
 
                   <div className="flex gap-2 justify-center mb-5" onPaste={handleOTPPaste}>
                     {otp.map((digit, i) => (

@@ -67,7 +67,7 @@ function toCurrentUser(user: ApiProfile): CurrentUser {
     role: user.role,
     is_active: true,
     is_verified: user.isVerified,
-    avatar_url: user.avatarUrl ? (user.avatarUrl.startsWith("/") ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ?? "http://localhost:4000"}${user.avatarUrl}` : user.avatarUrl) : null,
+    avatar_url: user.avatarUrl ? (user.avatarUrl.startsWith("/") ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ?? "https://be-property.onrender.com"}${user.avatarUrl}` : user.avatarUrl) : null,
     whatsapp_number: user.whatsappNumber,
     brokerage_name: user.brokerageName,
     broker_registration_number: user.brokerRegistrationNumber,
@@ -113,8 +113,16 @@ export function isTokenExpired(token: string): boolean {
 
 // ── Auth API calls ────────────────────────────────────────────────────────────
 
-export async function requestOTP(phone: string): Promise<{ sent: boolean; expiresIn: number }> {
-  return api.postPublic("/auth/send-otp", { phone });
+export async function requestOTP(phone: string): Promise<{
+  sent: boolean;
+  expiresIn: number;
+  developmentCode?: string;
+}> {
+  return api.postPublic<{
+    sent: boolean;
+    expiresIn: number;
+    developmentCode?: string;
+  }>("/auth/send-otp", { phone });
 }
 
 export async function verifyOTP(phone: string, code: string, role: Extract<UserRole, "BUYER" | "SELLER" | "BROKER"> = "BUYER", name?: string): Promise<CurrentUser> {

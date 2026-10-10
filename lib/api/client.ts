@@ -4,7 +4,9 @@
 
 import type { AgriProperty, PropertyCategory } from "@/lib/data/properties";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ??
+  "https://be-property.onrender.com/api/v1";
 const API_ORIGIN = API_BASE.replace(/\/api\/v1\/?$/, "");
 
 type ApiProperty = {
@@ -228,7 +230,19 @@ async function apiFetch<T>(
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const res = await fetch(`${API_BASE}${path}`, { ...fetchOpts, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { ...fetchOpts, headers });
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new ApiError(
+        0,
+        `Cannot reach the API at ${API_BASE}. Check that the backend is running and allows this frontend origin.`,
+        error,
+      );
+    }
+    throw error;
+  }
 
   if (res.status === 401 && !skipAuth) {
     clearTokens();
