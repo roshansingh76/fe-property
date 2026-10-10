@@ -6,6 +6,7 @@ import {
   fetchPropertyDocuments,
   uploadPropertyDocument,
   type PropertyDocument,
+  API_ORIGIN,
 } from "@/lib/api/client";
 
 interface PropertyDocumentsPanelProps {

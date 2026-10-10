@@ -287,6 +287,7 @@ export const api = {
 
 export { API_ORIGIN };
 
+export async function createProperty(payload: Record<string, unknown>): Promise<AgriProperty> {
   const response = await api.post<ApiProperty>("/properties", payload);
   return toFrontendProperty(response);
 }
