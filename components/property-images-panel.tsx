@@ -17,7 +17,7 @@ export function PropertyImagesPanel({
   onClose,
   onImagesUpdated,
 }: PropertyImagesPanelProps) {
-  const [images, setImages] = useState<string[]>(initialImages);
+  const [images, setImages] = useState<string[]>(() => [...new Set(initialImages)]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +39,7 @@ export function PropertyImagesPanel({
     setError(null);
     try {
       const newUrls = await uploadPropertyImages(propertyId, files);
-      const updated = [...images, ...newUrls];
+      const updated = [...new Set([...images, ...newUrls])];
       setImages(updated);
       onImagesUpdated(updated);
     } catch (e) {
@@ -77,7 +77,7 @@ export function PropertyImagesPanel({
       {images.length > 0 ? (
         <div className="mb-3 flex flex-wrap gap-2">
           {images.map((url, index) => (
-            <div key={url} className="relative">
+            <div key={`${url}-${index}`} className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={url}

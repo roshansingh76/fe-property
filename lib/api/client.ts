@@ -285,7 +285,8 @@ export const api = {
     apiFetch<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined, skipAuth: true }),
 };
 
-export async function createProperty(payload: Record<string, unknown>): Promise<AgriProperty> {
+export { API_ORIGIN };
+
   const response = await api.post<ApiProperty>("/properties", payload);
   return toFrontendProperty(response);
 }
@@ -333,7 +334,8 @@ export interface PropertyDocument {
 }
 
 export async function fetchPropertyDocuments(propertyId: string): Promise<PropertyDocument[]> {
-  return api.get<PropertyDocument[]>('/properties/' + propertyId + '/documents');
+  const res = await api.get<{ documents: PropertyDocument[] }>(`/properties/${propertyId}/documents`);
+  return res.documents;
 }
 
 export async function uploadPropertyDocument(propertyId: string, file: File, documentType: "KHATAUNI" | "KHASRA" | "IDENTITY" | "REGISTRY" | "OTHER"): Promise<void> {
